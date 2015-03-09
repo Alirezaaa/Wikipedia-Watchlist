@@ -5,18 +5,23 @@
  * Distributed under the terms of the CC-BY-SA 4.0
  */
 
-/* HOW TO USE
- * Press F12 on Google Chrome to open developer tools,
- * then write one of functions which are listed below and
- * read its documentation carefully.
- */
-
 /* FUNCTIONS
  * removeByNamespace() - Removes pages by namespace.
  * removeRedLinks()    - Removes missing pages.
  * removeRedirects()   - Removes redirects.
  * removeStartsWith()  - Removes pages which are started with given strings.
  * removeEndsWith()    - Removes pages which are ended with given strings.
+ */
+
+/* HOW TO USE
+ * Press F12 on Google Chrome to open developer tools,
+ * then write one of functions which are listed above and
+ * read its documentation carefully.
+ */
+
+/* ERROR REPORTING
+ * Please consider to report any issue to
+ * https://github.com/Alirezaaa/Wikipedia-Watchlist/issues
  */
 
 // Common used variables [START]
@@ -26,18 +31,18 @@ var currentURL = decodeURIComponent(document.URL);
 
 // Namespaces supported
 var namespaces = {
-	"اصلی": 0,
-	"کاربر": 2,
-	"ویکی\u200cپدیا": 4,
-	"پرونده": 6,
-	"مدیاویکی": 8,
-	"الگو": 10,
-	"راهنما": 12,
-	"رده": 14,
-	"درگاه": 100,
-	"کتاب": 102,
-	"برنامه آموزشی": 446,
-	"پودمان": 828
+	0: "اصلی",
+	2: "کاربر",
+	4: "ویکی\u200cپدیا",
+	6: "پرونده",
+	8: "مدیاویکی",
+	10: "الگو",
+	12: "راهنما",
+	14: "رده",
+	100: "درگاه",
+	102: "کتاب",
+	446: "برنامه آموزشی",
+	828: "پودمان"
 };
 
 // Common used variables [END]
@@ -78,19 +83,21 @@ function getNamespace(ns, outType) {
 	var nsExists = true;
 	var nsName, nsNumber = null;
 	if (isNaN(ns)) {
-		if (namespaces[ns] === undefined) nsExists = false;
-		else {
-			nsName = ns;
-			nsNumber = namespaces[ns];
-		}
-	} else {
 		for (var namespace in namespaces) {
 			if (namespaces[namespace] == ns) {
 				nsExists = true;
-				nsNumber = ns;
-				nsName = namespace;
+				nsNumber = namespace;
+				nsName = ns;
 				break;
-			} else nsExists = false;
+			} else
+				nsExists = false;
+		}
+	} else {
+		if (namespaces[ns] === undefined)
+			nsExists = false;
+		else {
+			nsName = namespaces[ns];
+			nsNumber = ns;
 		}
 	}
 
@@ -101,9 +108,12 @@ function getNamespace(ns, outType) {
 		// Return prefered namespace.
 	} else {
 		if (outType == "string") {
-			if (nsName == "اصلی") return "";
+			// The main namespace has no prefix.
+			if (nsName == namespaces[0])
+				return "";
 			return nsName + ":";
-		} else return nsNumber;
+		} else
+			return nsNumber;
 	}
 }
 
