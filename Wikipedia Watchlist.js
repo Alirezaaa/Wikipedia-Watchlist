@@ -1,6 +1,5 @@
 /*
- * Remove pages from your watchlist.
- * You have to run this tool from console, because of rarely use.
+ * Wikipedia watchlist with more options to remove pages.
  *
  * Author: Alireza (User:علیرضا)
  * Distributed under the terms of the CC-BY-SA 4.0
@@ -12,12 +11,12 @@
  * read its documentation carefully.
  */
 
-/* MAIN FUNCTIONS
- * removeByNamespace - Removes pages by namespace.
- * removeRedLinks    - Removes missing pages.
- * removeRedirects   - Removes redirects.
- * removeStartsWith  - Removes pages which are started with given strings.
- * removeEndsWith    - Removes pages which are ended with given strings.
+/* FUNCTIONS
+ * removeByNamespace() - Removes pages by namespace.
+ * removeRedLinks()    - Removes missing pages.
+ * removeRedirects()   - Removes redirects.
+ * removeStartsWith()  - Removes pages which are started with given strings.
+ * removeEndsWith()    - Removes pages which are ended with given strings.
  */
 
 // Common used variables [START]
