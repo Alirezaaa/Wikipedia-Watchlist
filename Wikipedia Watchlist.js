@@ -29,6 +29,7 @@
 // Please consider to report any issue to                  //
 // https://github.com/Alirezaaa/Wikipedia-Watchlist/issues //
 /////////////////////////////////////////////////////////////
+/*global console: true, jQuery: true*/
 
 (function ($) {
     "use strict";
@@ -60,7 +61,7 @@
     /**
      * Clears namespaces name from beginning of given list if 'clear' parameter is set,
      * also escapes defined characters for regular expression.
-     * @param  {object}  list  A list of strings to be escaped.
+     * @param  {object} list  A list of strings to be escaped.
      * @param  {boolean} clear Whether clear namespaces from beginning of string or not.
      * @return {object}
      */
@@ -320,7 +321,7 @@
             // On edit watchlist page
             if (currentURL.indexOf("raw") == -1) {
                 $(".mw-htmlform-flatlist-item a").filter(function () {
-                    if ($(this).attr("title") == $(this).text()) {
+                    if (($(this).attr("title") == $(this).text()) || ($(this).attr("class") == "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() == $(this).text())) {
                         for (var i = these.length - 1; i >= 0; i--)
                             if (new RegExp("^(" + these[i] + ")", "gi").test($(this).text()))
                                 return this;
@@ -390,7 +391,7 @@
             // On edit watchlist page
             if (currentURL.indexOf("raw") == -1) {
                 $(".mw-htmlform-flatlist-item a").filter(function () {
-                    if ($(this).attr("title") == $(this).text()) {
+                    if (($(this).attr("title") == $(this).text()) || ($(this).attr("class") == "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() == $(this).text())) {
                         for (var i = these.length - 1; i >= 0; i--) {
                             if (new RegExp("(" + these[i] + ")$", "gi").test($(this).text()))
                                 return this;
