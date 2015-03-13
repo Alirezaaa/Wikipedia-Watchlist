@@ -29,30 +29,29 @@
 // Please consider to report any issue to                  //
 // https://github.com/Alirezaaa/Wikipedia-Watchlist/issues //
 /////////////////////////////////////////////////////////////
-/*global console: true, jQuery: true*/
+/*jslint regexp: true*/
+/*global window: true, document: true, console: true, jQuery: true*/
 
 (function ($) {
     "use strict";
     // Common used variables [START]
 
-    // Current URL
-    var currentURL = decodeURIComponent(document.URL);
-
-    // Namespaces supported
-    var namespaces = {
-        0: "اصلی",
-        2: "کاربر",
-        4: "ویکی\u200cپدیا",
-        6: "پرونده",
-        8: "مدیاویکی",
-        10: "الگو",
-        12: "راهنما",
-        14: "رده",
-        100: "درگاه",
-        102: "کتاب",
-        446: "برنامه آموزشی",
-        828: "پودمان"
-    };
+    var
+        currentURL = decodeURIComponent(document.URL),
+        namespaces = {
+            0: "اصلی",
+            2: "کاربر",
+            4: "ویکی\u200cپدیا",
+            6: "پرونده",
+            8: "مدیاویکی",
+            10: "الگو",
+            12: "راهنما",
+            14: "رده",
+            100: "درگاه",
+            102: "کتاب",
+            446: "برنامه آموزشی",
+            828: "پودمان"
+        };
 
     // Common used variables [END]
 
@@ -66,19 +65,21 @@
      * @return {object}
      */
     function clear_escape(list, clear) {
-        if (typeof list === "object") {
-            for (var i = list.length - 1; i >= 0; i--) {
-                if (clear === true)
-                    list[i] = list[i].replace(/^([^/]+):/gi, "");
-                // Following line borrowed from
-                // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
-                list[i] = list[i].replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            }
-            return list;
-        } else {
+        if (typeof list !== "object") {
             console.log("First argument must be an object (" + typeof list, "given).");
             return;
         }
+
+        var i;
+        for (i = list.length - 1; i >= 0; i - 1) {
+            if (clear === true) {
+                list[i] = list[i].replace(/^([^\/]+):/gi, "");
+            }
+            // Following line borrowed from
+            // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
+            list[i] = list[i].replace(/[.*+?\^${}()|\[\]\\]/g, "\\$&");
+        }
+        return list;
     }
 
     /**
@@ -105,45 +106,46 @@
      * @return {string or number}    It depends on outType parameter.
      */
     function getNamespace(ns, outType) {
-        var nsExists = true;
-        var nsName, nsNumber = null;
+        var
+            nsExists = false,
+            nsName, nsNumber = null,
+            namespace;
 
         // If given namespace is a string value.
         if (isNaN(ns)) {
             ns = ns.trim();
-            for (var namespace in namespaces) {
-                if (namespaces[namespace] == ns) {
+            for (namespace in namespaces) {
+                if (namespaces[namespace] === ns) {
                     nsExists = true;
                     nsNumber = namespace;
                     nsName = ns;
                     break;
-                } else
-                    nsExists = false;
+                }
             }
             // If given namespace is a number value.
         } else {
-            if (namespaces[ns] === undefined)
+            if (namespaces[ns] === undefined) {
                 nsExists = false;
-            else {
+            } else {
                 nsName = namespaces[ns];
                 nsNumber = ns;
             }
         }
 
         // Log error.
-        if (!nsExists) {
-            console.log("The given name", ns, "is not valid.");
-            return;
-            // Return prefered namespace.
-        } else {
-            if (outType == "string") {
+        if (nsExists) {
+            if (outType === "string") {
                 // The main namespace has no prefix.
-                if (nsName == namespaces[0])
+                if (nsName === namespaces[0]) {
                     return "";
+                }
                 return nsName + ":";
-            } else
-                return nsNumber;
+            }
+            return nsNumber;
         }
+
+        console.log("The given name", ns, "is not valid.");
+        return;
     }
 
     // Helper functions [END]
@@ -157,19 +159,21 @@
      * @return {void}
      */
     window.removeByNamespace = function (ns, exceptions, save, log) {
-        exceptions = (typeof exceptions !== "undefined") ? clear_escape(exceptions, true) : [];
+        exceptions = (exceptions === "undefined") ? [] : clear_escape(exceptions, true);
         // Default value for save parameter is false.
-        save = (typeof save === "undefined") ? false : save;
+        save = (save === "undefined") ? false : save;
         // Default value for log parameter is true.
-        log = (typeof log === "undefined") ? true : log;
+        log = (log === "undefined") ? true : log;
 
         // Only works on watchlist special pages.
         if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1) {
             // On edit watchlist page
-            if (currentURL.indexOf("raw") == -1) {
+            if (currentURL.indexOf("raw") === -1) {
                 $("input[name='wpTitlesNs" + getNamespace(ns, "number") + "[]']").each(function () {
-                    var hasException = false;
-                    for (var i = exceptions.length - 1; i >= 0; i--) {
+                    var
+                        hasException = false,
+                        i;
+                    for (i = exceptions.length - 1; i >= 0; i - 1) {
                         if (new RegExp("^(" + getNamespace(ns, "string") + exceptions[i] + ")", "gi").test($(this).val())) {
                             hasException = true;
                             break;
@@ -178,38 +182,44 @@
                     if (!hasException) {
                         $(this).prop("checked", true);
 
-                        // Log changes.	
-                        if (log === true)
+                        if (log === true) {
                             logChanges($(this).val());
+                        }
                     }
                 });
-            }
-            // On edit raw watchlist page
-            else {
+            } else {
+                // On edit raw watchlist page
                 var contentElement = document.getElementById("mw-input-wpTitles");
                 ns = getNamespace(ns, "string");
                 contentElement.value = contentElement.value.replace(new RegExp("^(" + ns +
-                    ".+)", "gim"), function (match, p1) {
-                    for (var i = exceptions.length - 1; i >= 0; i--)
-                        if (new RegExp("^(" + ns + exceptions[i] + ")", "gi").test(p1))
+                    ".+)", "gim"), function (p1) {
+                    var i, namespace;
+                    for (i = exceptions.length - 1; i >= 0; i - 1) {
+                        if (new RegExp("^(" + ns + exceptions[i] + ")", "gi").test(p1)) {
                             return p1;
-                    for (var namespace in namespaces)
-                        if (namespace != ns.replace(":", "") && new RegExp("^(" + namespace + ":)", "gi").test(p1))
+                        }
+                    }
+                    for (namespace in namespaces) {
+                        if (namespaces.hasOwnProperty(namespace) && namespace !== ns.replace(":", "") && new RegExp("^(" + namespace + ":)", "gi").test(p1)) {
                             return p1;
+                        }
+                    }
 
-                        // Log changes.	
-                    if (log === true)
+                    if (log === true) {
                         logChanges(p1);
+                    }
 
                     return "";
                 });
             }
 
             // Automatically clicks on save button.
-            if (save === true)
+            if (save === true) {
                 savePage();
-        } else
+            }
+        } else {
             console.log("This function only works on watchlist special pages.");
+        }
     };
 
     /**
@@ -221,20 +231,23 @@
      * @return {void}
      */
     window.removeRedLinks = function (exceptions, save, log) {
-        exceptions = (typeof exceptions !== "undefined") ? clear_escape(exceptions, false) : [];
+        exceptions = (exceptions === "undefined") ? [] : clear_escape(exceptions, false);
         // Default value for save parameter is false.
-        save = (typeof save === "undefined") ? false : save;
+        save = (save === "undefined") ? false : save;
         // Default value for log parameter is true.
-        log = (typeof log === "undefined") ? true : log;
+        log = (log === "undefined") ? true : log;
 
         // Only works on edit watchlist page.
-        if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1 && currentURL.indexOf("raw") == -1) {
+        if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1 && currentURL.indexOf("raw") === -1) {
             $(".new").filter(function () {
-                if ($(this).text() == $(this).parents(".mw-htmlform-flatlist-item").children("input").val())
+                if ($(this).text() === $(this).parents(".mw-htmlform-flatlist-item").children("input").val()) {
                     return this;
+                }
             }).parents(".mw-htmlform-flatlist-item").children("input").each(function () {
-                var hasException = false;
-                for (var i = exceptions.length - 1; i >= 0; i--) {
+                var
+                    hasException = false,
+                    i;
+                for (i = exceptions.length - 1; i >= 0; i - 1) {
                     if (new RegExp("^(" + exceptions[i] + ")", "gi").test($(this).val())) {
                         hasException = true;
                         break;
@@ -243,17 +256,19 @@
                 if (!hasException) {
                     $(this).prop("checked", true);
 
-                    // Log changes.	
-                    if (log === true)
+                    if (log === true) {
                         logChanges($(this).val());
+                    }
                 }
             });
 
             // Automatically clicks on save button.
-            if (save === true)
+            if (save === true) {
                 savePage();
-        } else
+            }
+        } else {
             console.log("This function only works on edit watchlist page.");
+        }
     };
 
     /**
@@ -265,20 +280,23 @@
      * @return {void}
      */
     window.removeRedirects = function (exceptions, save, log) {
-        exceptions = (typeof exceptions !== "undefined") ? clear_escape(exceptions, false) : [];
+        exceptions = (exceptions === "undefined") ? [] : clear_escape(exceptions, false);
         // Default value for save parameter is false.
-        save = (typeof save === "undefined") ? false : save;
+        save = (save === "undefined") ? false : save;
         // Default value for log parameter is true.
-        log = (typeof log === "undefined") ? true : log;
+        log = (log === "undefined") ? true : log;
 
         // Only works on edit watchlist page.
-        if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1 && currentURL.indexOf("raw") == -1) {
+        if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1 && currentURL.indexOf("raw") === -1) {
             $(".mw-redirect").filter(function () {
-                if ($(this).text() == $(this).parents(".mw-htmlform-flatlist-item").children("input").val())
+                if ($(this).text() === $(this).parents(".mw-htmlform-flatlist-item").children("input").val()) {
                     return this;
+                }
             }).parents(".mw-htmlform-flatlist-item").children("input").each(function () {
-                var hasException = false;
-                for (var i = exceptions.length - 1; i >= 0; i--) {
+                var
+                    hasException = false,
+                    i;
+                for (i = exceptions.length - 1; i >= 0; i - 1) {
                     if (new RegExp("^(" + exceptions[i] + ")", "gi").test($(this).val())) {
                         hasException = true;
                         break;
@@ -287,17 +305,19 @@
                 if (!hasException) {
                     $(this).prop("checked", true);
 
-                    // Log changes.	
-                    if (log === true)
+                    if (log === true) {
                         logChanges($(this).val());
+                    }
                 }
             });
 
             // Automatically clicks on save button.
-            if (save === true)
+            if (save === true) {
                 savePage();
-        } else
+            }
+        } else {
             console.log("This function only works on edit watchlist page.");
+        }
     };
 
     /**
@@ -309,26 +329,31 @@
      * @return {void}
      */
     window.removeStartsWith = function (these, exceptions, save, log) {
-        these = (typeof these !== "undefined") ? clear_escape(these, false) : [];
-        exceptions = (typeof exceptions !== "undefined") ? clear_escape(exceptions, false) : [];
+        these = (these === "undefined") ? [] : clear_escape(these, false);
+        exceptions = (exceptions === "undefined") ? [] : clear_escape(exceptions, false);
         // Default value for save parameter is false.
-        save = (typeof save === "undefined") ? false : save;
+        save = (save === "undefined") ? false : save;
         // Default value for log parameter is true.
-        log = (typeof log === "undefined") ? true : log;
+        log = (log === "undefined") ? true : log;
 
         // Only works on watchlist special pages.
         if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1) {
             // On edit watchlist page
-            if (currentURL.indexOf("raw") == -1) {
+            if (currentURL.indexOf("raw") === -1) {
                 $(".mw-htmlform-flatlist-item a").filter(function () {
-                    if (($(this).attr("title") == $(this).text()) || ($(this).attr("class") == "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() == $(this).text())) {
-                        for (var i = these.length - 1; i >= 0; i--)
-                            if (new RegExp("^(" + these[i] + ")", "gi").test($(this).text()))
+                    if (($(this).attr("title") === $(this).text()) || ($(this).attr("class") === "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() === $(this).text())) {
+                        var i;
+                        for (i = these.length - 1; i >= 0; i - 1) {
+                            if (new RegExp("^(" + these[i] + ")", "gi").test($(this).text())) {
                                 return this;
+                            }
+                        }
                     }
                 }).each(function () {
-                    var hasException = false;
-                    for (var i = exceptions.length - 1; i >= 0; i--) {
+                    var
+                        hasException = false,
+                        i;
+                    for (i = exceptions.length - 1; i >= 0; i - 1) {
                         if (new RegExp("(" + exceptions[i] + ")$", "gi").test($(this).text())) {
                             hasException = true;
                             break;
@@ -337,36 +362,42 @@
                     if (!hasException) {
                         $(this).parents(".mw-htmlform-flatlist-item").children("input").prop("checked", true);
 
-                        // Log changes.	
-                        if (log === true)
+                        if (log === true) {
                             logChanges($(this).text());
+                        }
                     }
                 });
-            }
-            // On edit raw watchlist page
-            else {
-                var contentElement = document.getElementById("mw-input-wpTitles");
-                var replaceFunc = function (match, p1) {
-                    for (var i = exceptions.length - 1; i >= 0; i--)
-                        if (new RegExp("(" + exceptions[i] + ")$", "gi").test(p1))
-                            return p1;
+            } else {
+                // On edit raw watchlist page
+                var
+                    contentElement = document.getElementById("mw-input-wpTitles"),
+                    replaceFunc = function (p1) {
+                        var i;
+                        for (i = exceptions.length - 1; i >= 0; i - 1) {
+                            if (new RegExp("(" + exceptions[i] + ")$", "gi").test(p1)) {
+                                return p1;
+                            }
+                        }
 
-                        // Log changes.	
-                    if (log === true)
-                        logChanges(p1);
+                        if (log === true) {
+                            logChanges(p1);
+                        }
 
-                    return "";
-                };
-                for (var i = these.length - 1; i >= 0; i--) {
+                        return "";
+                    },
+                    i;
+                for (i = these.length - 1; i >= 0; i - 1) {
                     contentElement.value = contentElement.value.replace(new RegExp("(^(?:" + these[i] + ")(?:.+)?)", "gim"), replaceFunc);
                 }
             }
 
             // Automatically clicks on save button.
-            if (save === true)
+            if (save === true) {
                 savePage();
-        } else
+            }
+        } else {
             console.log("This function only works on watchlist special pages.");
+        }
     };
 
     /**
@@ -379,27 +410,31 @@
      * @return {void}
      */
     window.removeEndsWith = function (these, exceptions, save, log) {
-        these = (typeof these !== "undefined") ? clear_escape(these, false) : [];
-        exceptions = (typeof exceptions !== "undefined") ? clear_escape(exceptions, false) : [];
+        these = (these === "undefined") ? [] : clear_escape(these, false);
+        exceptions = (exceptions === "undefined") ? [] : clear_escape(exceptions, false);
         // Default value for save parameter is false.
-        save = (typeof save === "undefined") ? false : save;
+        save = (save === "undefined") ? false : save;
         // Default value for log parameter is true.
-        log = (typeof log === "undefined") ? true : log;
+        log = (log === "undefined") ? true : log;
 
         // Only works on watchlist special pages.
         if (currentURL.indexOf("ویژه:ویرایش_فهرست_پی\u200cگیری\u200cها") > -1) {
             // On edit watchlist page
-            if (currentURL.indexOf("raw") == -1) {
+            if (currentURL.indexOf("raw") === -1) {
                 $(".mw-htmlform-flatlist-item a").filter(function () {
-                    if (($(this).attr("title") == $(this).text()) || ($(this).attr("class") == "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() == $(this).text())) {
-                        for (var i = these.length - 1; i >= 0; i--) {
-                            if (new RegExp("(" + these[i] + ")$", "gi").test($(this).text()))
+                    if (($(this).attr("title") === $(this).text()) || ($(this).attr("class") === "new" && $(this).attr("title").replace("(صفحه وجود ندارد)", "").trim() === $(this).text())) {
+                        var i;
+                        for (i = these.length - 1; i >= 0; i - 1) {
+                            if (new RegExp("(" + these[i] + ")$", "gi").test($(this).text())) {
                                 return this;
+                            }
                         }
                     }
                 }).each(function () {
-                    var hasException = false;
-                    for (var i = exceptions.length - 1; i >= 0; i--) {
+                    var
+                        hasException = false,
+                        i;
+                    for (i = exceptions.length - 1; i >= 0; i - 1) {
                         if (new RegExp("^(" + exceptions[i] + ")", "gi").test($(this).text())) {
                             hasException = true;
                             break;
@@ -408,35 +443,41 @@
                     if (!hasException) {
                         $(this).parents(".mw-htmlform-flatlist-item").children("input").prop("checked", true);
 
-                        // Log changes.	
-                        if (log === true)
+                        if (log === true) {
                             logChanges($(this).text());
+                        }
                     }
                 });
-            }
-            // On edit raw watchlist page
-            else {
-                var contentElement = document.getElementById("mw-input-wpTitles");
-                var replaceFunc = function (match, p1) {
-                    for (var i = exceptions.length - 1; i >= 0; i--)
-                        if (new RegExp("^(" + exceptions[i] + ")", "gi").test(p1))
-                            return p1;
+            } else {
+                // On edit raw watchlist page
+                var
+                    contentElement = document.getElementById("mw-input-wpTitles"),
+                    replaceFunc = function (p1) {
+                        var i;
+                        for (i = exceptions.length - 1; i >= 0; i - 1) {
+                            if (new RegExp("^(" + exceptions[i] + ")", "gi").test(p1)) {
+                                return p1;
+                            }
+                        }
 
-                        // Log changes.	
-                    if (log === true)
-                        logChanges(p1);
+                        if (log === true) {
+                            logChanges(p1);
+                        }
 
-                    return "";
-                };
-                for (var i = these.length - 1; i >= 0; i--) {
+                        return "";
+                    },
+                    i;
+                for (i = these.length - 1; i >= 0; i - 1) {
                     contentElement.value = contentElement.value.replace(new RegExp("((?:.+)?(?:" + these[i] + ")$)", "gim"), replaceFunc);
                 }
             }
 
             // Automatically clicks on save button.
-            if (save === true)
+            if (save === true) {
                 savePage();
-        } else
+            }
+        } else {
             console.log("This function only works on watchlist special pages.");
+        }
     };
 }(jQuery));
