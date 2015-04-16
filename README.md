@@ -1,4 +1,4 @@
-# Wikipedia Watchlist
+# Wikipedia Watchlist [![Build Status](https://travis-ci.org/Alirezaaa/Wikipedia-Watchlist.svg)](https://travis-ci.org/Alirezaaa/Wikipedia-Watchlist)
 Wikipedia watchlist with more options to remove pages.
 
 ## Functions
